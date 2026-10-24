@@ -101,8 +101,9 @@ local function prettyName(name)
   return (name:gsub("%.[%w]+$", ""):gsub("_", " "))
 end
 
+-- RADIOSYNC_OFFLINE is only set when the client runs this plugin in singleplayer (offline mode).
 local function musicDir()
-  return scriptDir() .. "/music"
+  return RADIOSYNC_OFFLINE and RADIOSYNC_OFFLINE.musicDir or scriptDir() .. "/music"
 end
 
 local function fileSize(path)
@@ -1314,10 +1315,10 @@ function radioSync_tick()
 end
 
 math.randomseed(os.time())
-loadConfig()
+if not RADIOSYNC_OFFLINE then loadConfig() end
 scanMusic()
 setupLive()
-if config.liveRadioTest then pcall(startLiveRadioTest) end
+if config.liveRadioTest and not RADIOSYNC_OFFLINE then pcall(startLiveRadioTest) end
 
 MP.RegisterEvent("onVehicleDeleted", "radioSync_onVehicleDeleted")
 MP.RegisterEvent("onPlayerDisconnect", "radioSync_onPlayerDisconnect")

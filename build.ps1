@@ -33,8 +33,16 @@ $store = [System.IO.Compression.CompressionLevel]::NoCompression
 if (Test-Path (Join-Path $root 'dist')) { Remove-Item (Join-Path $root 'dist') -Recurse -Force }
 New-Item -ItemType Directory -Force (Join-Path $dist 'Client'), (Join-Path $dist 'Server'), $release | Out-Null
 
-# Client mod
-New-Zip (Join-Path $dist 'Client\RadioSync.zip') (Get-ChildItem $clientSrc -Recurse -File) $clientSrc '' $optimal
+# Client mod (+ the server plugin, which the client runs itself in offline mode)
+$clientZip = Join-Path $dist 'Client\RadioSync.zip'
+New-Zip $clientZip (Get-ChildItem $clientSrc -Recurse -File) $clientSrc '' $optimal
+$zip = [System.IO.Compression.ZipFile]::Open($clientZip, 'Update')
+try {
+  [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, (Join-Path $serverSrc 'main.lua'),
+    'lua/ge/extensions/radioSync/server.lua', $optimal) | Out-Null
+} finally {
+  $zip.Dispose()
+}
 
 # Server plugin
 Copy-Item $serverSrc (Join-Path $dist 'Server') -Recurse

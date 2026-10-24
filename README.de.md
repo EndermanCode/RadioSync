@@ -56,6 +56,16 @@ music/
    - Tab **Playlist**: Reihenfolge, springen, entfernen
 3. Andere Spieler in der Nähe hören automatisch mit.
 
+## Offline-Modus (Einzelspieler)
+Ohne BeamMP-Server spielt die Mod deine eigene Musik ab – nur in deinem Auto, ohne Sync.
+Der Modus erscheint nur außerhalb von BeamMP-Sessions (im App-Kopf steht dann „offline“).
+1. `RadioSync.zip` in den normalen BeamNG-Mods-Ordner legen (`<Userordner>/current/mods/`).
+   Auf Servern deaktiviert BeamMP sie automatisch und nutzt stattdessen die Version des Servers.
+2. Songs nach `<Userordner>/current/ui/modules/apps/RadioSync/music/` kopieren – gleiche Regeln wie auf dem Server:
+   jeder Unterordner = ein Sender, plus „Mix“. Neue Songs erscheinen nach spätestens 30 s.
+   Von BeamMP-Servern geladene Songs landen im selben Ordner und sind offline ebenfalls abspielbar.
+3. App „Radio Sync“ hinzufügen, ins Auto setzen und Sender oder Songs wählen. Offline gibt es kein Live-Radio.
+
 ## Konfiguration (`config.json`)
 | Feld | Bedeutung |
 |------|-----------|
@@ -97,6 +107,7 @@ Deshalb holt der **Server** die Sender per `curl` und verteilt sie über die Bea
 ```
 Server/RadioSync/main.lua                 Fahrzeug-Radios, Sender, Song-Übertragung
 Client/lua/ge/extensions/radioSync.lua    BeamMP-Events ↔ UI, Song-Cache, Abstand → Lautstärke
+Client/lua/ge/extensions/radioSync/offline.lua  Offline-Modus: führt das Server-Plugin im Spiel aus
 Client/scripts/radioSync/modScript.lua    lädt die Extension
 Client/ui/modules/apps/RadioSync/         UI-App: Wiedergabe, Effekte, Bedienung
 ```

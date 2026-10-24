@@ -25,8 +25,17 @@ local progressTimer = 0
 local stationsList = {}       -- music folder stations from the server (current song + elapsed)
 local reportedDurations = {}  -- [file] = true once sent to the server
 
+local offline = require("ge/extensions/radioSync/offline")  -- server plugin run locally in singleplayer
+
+-- Connected to a BeamMP server. BeamMP loaded but playing singleplayer counts as offline.
 local function isMP()
-  return MPVehicleGE ~= nil and TriggerServerEvent ~= nil and AddEventHandler ~= nil
+  if MPVehicleGE == nil or TriggerServerEvent == nil or AddEventHandler == nil then return false end
+  if MPCoreNetwork and MPCoreNetwork.isMPSession then return MPCoreNetwork.isMPSession() == true end
+  return true
+end
+
+local function goingMP()
+  return MPCoreNetwork ~= nil and MPCoreNetwork.isGoingMPSession ~= nil and MPCoreNetwork.isGoingMPSession() == true
 end
 
 local function toUI(name, data)
@@ -34,8 +43,28 @@ local function toUI(name, data)
 end
 
 local function sendServer(event, data)
-  if not isMP() then return end
-  TriggerServerEvent(event, data and jsonEncode(data) or "")
+  local payload = data and jsonEncode(data) or ""
+  if isMP() then
+    TriggerServerEvent(event, payload)
+  elseif offline.running() then
+    offline.send(event, payload)
+  end
+end
+
+-- Server vehicle id ("pid-vid") <-> game vehicle id. Offline: pid 0 + game id, all cars are own.
+local function serverVidOf(gameVid)
+  if isMP() then return MPVehicleGE.getServerVehicleID(gameVid) end
+  return offline.running() and (offline.PID .. "-" .. gameVid) or nil
+end
+
+local function gameVidOf(serverVid)
+  if isMP() then return MPVehicleGE.getGameVehicleID(serverVid) end
+  return tonumber(tostring(serverVid):match("^%d+%-(%d+)$"))
+end
+
+local function isOwnGameVid(gameVid)
+  if isMP() then return MPVehicleGE.isOwn(gameVid) == true end
+  return true
 end
 
 ---------------------------------------------------------------------------
@@ -47,12 +76,12 @@ end
 -- can't be controlled after getting out and the walker never gets a radio of its own.
 local function currentVehicle()
   local gameVid = be:getPlayerVehicleID(0)
-  if not gameVid or gameVid < 0 or not MPVehicleGE then return nil, false end
+  if not gameVid or gameVid < 0 then return nil, false end
   local veh = be:getObjectByID(gameVid)
   if not veh or veh:getJBeamFilename() == "unicycle" then return nil, false end
-  local serverVid = MPVehicleGE.getServerVehicleID(gameVid)
+  local serverVid = serverVidOf(gameVid)
   if not serverVid then return nil, false end
-  return serverVid, MPVehicleGE.isOwn(gameVid) == true
+  return serverVid, isOwnGameVid(gameVid)
 end
 
 local function distance(a, b)
@@ -106,7 +135,7 @@ local function computeGains()
   local playerVeh = playerGameVid and playerGameVid >= 0 and be:getObjectByID(playerGameVid)
   if playerVeh and playerVeh:getJBeamFilename() ~= "unicycle" and camPos
       and (interiorCam or distance(playerVeh:getPosition(), camPos) < INTERIOR_DISTANCE) then
-    local playerServerVid = MPVehicleGE.getServerVehicleID(playerGameVid)
+    local playerServerVid = serverVidOf(playerGameVid)
     local ownOpen = playerServerVid and radios[playerServerVid] and radios[playerServerVid].open or 0
     inCar, shield = true, 1 - ownOpen
   end
@@ -114,7 +143,7 @@ local function computeGains()
 
   local list = {}
   for serverVid in pairs(radios) do
-    local gameVid = MPVehicleGE.getGameVehicleID(serverVid)
+    local gameVid = gameVidOf(serverVid)
     local veh = gameVid and gameVid >= 0 and be:getObjectByID(gameVid)
     if veh then
       local g, pan, inside = 0, 0, false
@@ -219,6 +248,7 @@ local function uiConfig()
     c.songs[i] = { file = s.file, title = s.title, size = s.size, folder = s.folder, ready = ready[s.file] == true }
   end
   c.musicDir = MUSIC_DIR
+  c.offline = not isMP()
   return c
 end
 
@@ -466,19 +496,29 @@ local function updateLiveSubs(gains)
   sendServer("radioSync_liveSub", { ids = ids })
 end
 
+local serverEvents = {
+  radioSync_config = onConfig,
+  radioSync_stations = onStations,
+  radioSync_live = onLive,
+  radioSync_liveError = onLiveError,
+  radioSync_liveMeta = onLiveMeta,
+  radioSync_snapshot = onSnapshot,
+  radioSync_state = onState,
+  radioSync_remove = onRemove,
+  radioSync_chunk = onChunk,
+  radioSync_songMissing = onSongMissing,
+}
+
 local function registerHandlers()
   if handlersRegistered or not isMP() then return end
-  AddEventHandler("radioSync_config", onConfig)
-  AddEventHandler("radioSync_stations", onStations)
-  AddEventHandler("radioSync_live", onLive)
-  AddEventHandler("radioSync_liveError", onLiveError)
-  AddEventHandler("radioSync_liveMeta", onLiveMeta)
-  AddEventHandler("radioSync_snapshot", onSnapshot)
-  AddEventHandler("radioSync_state", onState)
-  AddEventHandler("radioSync_remove", onRemove)
-  AddEventHandler("radioSync_chunk", onChunk)
-  AddEventHandler("radioSync_songMissing", onSongMissing)
+  for event, fn in pairs(serverEvents) do AddEventHandler(event, fn) end
   handlersRegistered = true
+end
+
+-- Offline mode: messages from the locally running server plugin.
+local function deliverOffline(event, payload)
+  local fn = serverEvents[event]
+  if fn then fn(payload) end
 end
 
 ---------------------------------------------------------------------------
@@ -529,8 +569,8 @@ local function pollOpenness(dtReal)
   if openTimer < OPEN_POLL_INTERVAL then return end
   openTimer = 0
   for serverVid in pairs(radios) do
-    local gameVid = MPVehicleGE.getGameVehicleID(serverVid)
-    if gameVid and gameVid >= 0 and MPVehicleGE.isOwn(gameVid) then
+    local gameVid = gameVidOf(serverVid)
+    if gameVid and gameVid >= 0 and isOwnGameVid(gameVid) then
       local veh = be:getObjectByID(gameVid)
       if veh then veh:queueLuaCommand(string.format(OPEN_VE, serverVid)) end
     end
@@ -756,10 +796,41 @@ end
 -- Extension hooks
 ---------------------------------------------------------------------------
 
+-- Forget everything from the previous server (switching between offline mode and BeamMP).
+local function resetState()
+  config = nil
+  radios = {}
+  stationsList = {}
+  ready = {}
+  download = nil
+  downloadQueue = {}
+  liveSubKey = nil
+  requestTimer = REQUEST_INTERVAL
+  pushAllToUI()
+end
+
 function M.onUpdate(dtReal)
   clockTime = clockTime + dtReal
-  if not isMP() then return end
-  registerHandlers()
+  if isMP() then
+    if offline.running() then
+      offline.stop()
+      resetState()
+    end
+    registerHandlers()
+  elseif goingMP() then
+    if offline.running() then
+      offline.stop()
+      resetState()
+    end
+    return
+  else
+    if not offline.running() then
+      if not offline.start(MUSIC_DIR:sub(1, -2)) then return end
+      log("I", "radioSync", "Offline mode: music from " .. MUSIC_DIR)
+      resetState()
+    end
+    offline.update(dtReal, deliverOffline)
+  end
   updateDownload(dtReal)
   pollOpenness(dtReal)
 
@@ -769,7 +840,7 @@ function M.onUpdate(dtReal)
       requestTimer = 0
       sendServer("radioSync_requestState")
     end
-  else
+  elseif isMP() then
     ensureAppInLayout(dtReal)
   end
 
@@ -780,17 +851,25 @@ function M.onUpdate(dtReal)
   local vid, own = currentVehicle()
   local gains, fx = computeGains()
   if config then updateLiveSubs(gains) end
+  local myPid = offline.PID
+  if isMP() then
+    myPid = MPConfig and MPConfig.getPlayerServerID and MPConfig.getPlayerServerID() or nil
+  end
   toUI("RadioSyncGains", {
     gains = gains,
     fx = fx,
     current = vid,
     own = own,
-    myPid = MPConfig and MPConfig.getPlayerServerID and MPConfig.getPlayerServerID() or nil,
+    myPid = myPid,
   })
 end
 
 function M.onExtensionLoaded()
   registerHandlers()
+end
+
+function M.onVehicleDestroyed(gameVid)
+  if offline.running() then offline.vehicleDeleted(gameVid) end
 end
 
 -- Reloaded level / reconnected: fetch everything again.

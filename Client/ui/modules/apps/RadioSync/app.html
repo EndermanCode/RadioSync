@@ -18,6 +18,7 @@
     .rs-lang:hover { color:var(--text); }
     .rs-logo { font-weight:700; letter-spacing:0.5px; font-size:12px; text-transform:uppercase; flex:1; }
     .rs-logo b { color:var(--accent); }
+    .rs-logo small { margin-left:6px; color:var(--dim); font-size:9px; font-weight:400; letter-spacing:0; }
     .rs-icon { background:none; border:0; color:var(--dim); padding:3px; border-radius:6px; cursor:pointer; }
     .rs-icon:hover { color:var(--text); background:var(--card); }
 
@@ -135,7 +136,7 @@
 
   <!-- Header -->
   <div class="rs-head" ng-click="toggleCollapsed()" title="{{ settings.collapsed ? t('expand') : t('collapse') }}">
-    <div class="rs-logo">Radio<b>Sync</b></div>
+    <div class="rs-logo">Radio<b>Sync</b><small ng-if="config.offline" title="{{ t('offlineTip') }}" ng-bind="t('offline')"></small></div>
     <button class="rs-lang" ng-click="cycleLanguage(); $event.stopPropagation()" title="{{ langTitle() }}"
             ng-bind="langLabel()"></button>
     <span class="rs-icon">
@@ -199,7 +200,7 @@
   </div>
 
   <!-- Owner volume: loudness and reach for everyone -->
-  <div class="rs-vol rs-ownervol" ng-if="canControl() && state" title="{{ t('ownerVolTip') }}">
+  <div class="rs-vol rs-ownervol" ng-if="canControl() && state && !config.offline" title="{{ t('ownerVolTip') }}">
     <svg viewBox="0 0 24 24"><path d="M3.2 6.1L17.6 0l.8 1.8L8.6 6H20a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7c0-.4.1-.7.2-.9zM7 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm6-8v2h6v-2h-6zm0 4v2h6v-2h-6z"/></svg>
     <input type="range" min="0" max="1" step="0.05" ng-model="ownerVol.value" ng-change="ownerVolumeChanged()">
     <span ng-bind="((ownerVol.value * 100) | number:0) + '%'"></span>
@@ -255,7 +256,7 @@
           </li>
         </ul>
         <div class="rs-empty" ng-if="!stationList.length && !liveList().length">
-          {{ t('noStations') }}<br>{{ t('uploadTo') }} <b>Resources/Server/RadioSync/music/</b><br>{{ t('noStationsHint') }}
+          {{ t('noStations') }}<br>{{ t(config.offline ? 'copyTo' : 'uploadTo') }} <b ng-bind="musicFolder()"></b><br>{{ t('noStationsHint') }}
         </div>
       </div>
 
@@ -284,7 +285,7 @@
           </ul>
         </div>
         <div class="rs-empty" ng-if="!config.songs.length">
-          {{ t('noSongs') }}<br>{{ t('uploadTo') }} <b>Resources/Server/RadioSync/music/</b><br>{{ t('noSongsHint') }}
+          {{ t(config.offline ? 'noSongsOffline' : 'noSongs') }}<br>{{ t(config.offline ? 'copyTo' : 'uploadTo') }} <b ng-bind="musicFolder()"></b><br>{{ t('noSongsHint') }}
         </div>
       </div>
 

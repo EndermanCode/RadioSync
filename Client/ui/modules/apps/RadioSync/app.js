@@ -83,7 +83,9 @@ angular.module('beamng.apps')
           songError: 'Song konnte nicht abgespielt werden (Code {0}){1}',
           liveUnsupported: 'Live-Radio wird von diesem Spiel-Browser nicht unterstützt',
           mp3Unsupported: 'MP3-Stream nicht abspielbar',
-          ownerVol: 'für alle', ownerVolTip: 'Radio-Lautstärke für alle – lauter = auch weiter zu hören'
+          ownerVol: 'für alle', ownerVolTip: 'Radio-Lautstärke für alle – lauter = auch weiter zu hören',
+          offline: 'offline', offlineTip: 'Offline-Modus: eigene Musik aus dem BeamNG-Userordner, ohne Sync',
+          copyTo: 'Songs kopieren nach:', noSongsOffline: 'Keine Songs im Musikordner.', userFolder: 'BeamNG-Userordner'
         },
         en: {
           expand: 'Expand', collapse: 'Collapse', lang: 'Language: {0}', langAuto: 'automatic',
@@ -112,7 +114,9 @@ angular.module('beamng.apps')
           songError: 'Song could not be played (code {0}){1}',
           liveUnsupported: 'Live radio is not supported by this game browser',
           mp3Unsupported: 'MP3 stream cannot be played',
-          ownerVol: 'for all', ownerVolTip: 'Radio volume for everyone – louder also carries further'
+          ownerVol: 'for all', ownerVolTip: 'Radio volume for everyone – louder also carries further',
+          offline: 'offline', offlineTip: 'Offline mode: your own music from the BeamNG user folder, no sync',
+          copyTo: 'Copy songs to:', noSongsOffline: 'No songs in the music folder.', userFolder: 'BeamNG user folder'
         }
       };
 
@@ -1032,6 +1036,13 @@ angular.module('beamng.apps')
       });
 
       // ---------------------------------------------------------------- UI actions
+
+      // Where songs go: server music folder, or offline the song cache in the user folder.
+      scope.musicFolder = function () {
+        return scope.config.offline
+          ? '<' + scope.t('userFolder') + '>/ui/modules/apps/RadioSync/music/'
+          : 'Resources/Server/RadioSync/music/';
+      };
 
       scope.canControl = function () {
         return scope.own && !!scope.current;
