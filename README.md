@@ -48,7 +48,8 @@ music/
 - Requires BeamMP server ≥ 3.1 (`FS.ListFiles`/`FS.ListDirectories`).
 
 ## Usage (players)
-1. Esc → **UI Apps** → add the **"Radio Sync"** app. The music plays inside this app.
+1. The **"Radio Sync"** app is added automatically (top right) when joining – the music plays inside this app.
+   Removed it? Add it back via Esc → **UI Apps**. It is only added once per layout.
 2. Get into your own car:
    - **Sender** tab (stations): click a station
    - **Musik** tab (music): add songs to the playlist

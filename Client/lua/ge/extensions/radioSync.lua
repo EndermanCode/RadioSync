@@ -658,6 +658,50 @@ function M.diagnoseResult(text)
 end
 
 ---------------------------------------------------------------------------
+-- The music only plays inside the UI app, so it is added (top right) to the current layout
+-- when joining a RadioSync server. Once per layout: if the player removes it, it stays removed.
+---------------------------------------------------------------------------
+
+local APP_NAME = "radioSync"
+local APP_PLACEMENT = { position = "absolute", top = "0em", right = "0em", width = "20em", height = "27.5em" }
+local AUTOADD_FILE = "/settings/radioSync.json"  -- { autoAdded = { [layout filename] = true } }
+local AUTOADD_RETRY = 2       -- seconds between tries until the UI has a layout
+local autoAddDone = false
+local autoAddTimer = AUTOADD_RETRY
+
+local function ensureAppInLayout(dtReal)
+  if autoAddDone then return end
+  autoAddTimer = autoAddTimer + dtReal
+  if autoAddTimer < AUTOADD_RETRY then return end
+  autoAddTimer = 0
+
+  local layouts = extensions.ui_appLayouts
+  if not layouts or not layouts.getCurrentLayout or not layouts.addApp or not layouts.setCurrentLayout then
+    autoAddDone = true  -- game version without this layout API
+    return
+  end
+  local layout = layouts.getCurrentLayout()
+  if not layout or type(layout.filename) ~= "string" then return end  -- UI not ready yet
+  autoAddDone = true
+
+  local saved = jsonReadFile(AUTOADD_FILE) or {}
+  saved.autoAdded = saved.autoAdded or {}
+  if saved.autoAdded[layout.filename] then return end
+
+  local present = false
+  for _, app in ipairs(layout.apps or {}) do
+    if app.appName == APP_NAME then present = true end
+  end
+  if not present then
+    if not layouts.addApp(layout.filename, APP_NAME, deepcopy(APP_PLACEMENT)) then return end
+    layouts.setCurrentLayout(layout.filename)  -- reload from disk so the UI shows the app
+    log("I", "radioSync", "UI app added to layout " .. layout.filename)
+  end
+  saved.autoAdded[layout.filename] = true
+  jsonWriteFile(AUTOADD_FILE, saved, true)
+end
+
+---------------------------------------------------------------------------
 -- UI -> client (called via bngApi.engineLua)
 ---------------------------------------------------------------------------
 
@@ -723,6 +767,8 @@ function M.onUpdate(dtReal)
       requestTimer = 0
       sendServer("radioSync_requestState")
     end
+  else
+    ensureAppInLayout(dtReal)
   end
 
   gainTimer = gainTimer + dtReal
@@ -753,6 +799,8 @@ function M.onWorldReadyState(state)
     downloadQueue = {}
     liveSubKey = nil
     requestTimer = REQUEST_INTERVAL
+    autoAddDone = false
+    autoAddTimer = AUTOADD_RETRY
   end
 end
 

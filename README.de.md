@@ -48,7 +48,8 @@ music/
 - Braucht BeamMP-Server ≥ 3.1 (`FS.ListFiles`/`FS.ListDirectories`).
 
 ## Benutzung (Spieler)
-1. Esc → **UI Apps** → App **„Radio Sync“** hinzufügen. Die Musik läuft in dieser App.
+1. Die App **„Radio Sync“** wird beim Joinen automatisch hinzugefügt (oben rechts) – die Musik läuft in dieser App.
+   Entfernt? Über Esc → **UI Apps** wieder hinzufügen. Sie wird pro Layout nur einmal automatisch eingefügt.
 2. Ins eigene Auto setzen:
    - Tab **Sender**: Sender anklicken
    - Tab **Musik**: Songs zur Playlist hinzufügen
