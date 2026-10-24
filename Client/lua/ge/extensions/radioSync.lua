@@ -688,8 +688,10 @@ local function ensureAppInLayout(dtReal)
   saved.autoAdded = saved.autoAdded or {}
   if saved.autoAdded[layout.filename] then return end
 
+  -- Check the file on disk (what addApp writes to), the in-memory layout can be outdated.
+  local onDisk = FS:fileExists(layout.filename) and jsonReadFile(layout.filename) or layout
   local present = false
-  for _, app in ipairs(layout.apps or {}) do
+  for _, app in ipairs(onDisk.apps or {}) do
     if app.appName == APP_NAME then present = true end
   end
   if not present then

@@ -17,6 +17,12 @@ angular.module('beamng.apps')
       var fxMap = {};    // vid -> { pan, inside } from Lua
       var myPid = null;
 
+      // Only the newest app instance plays. When the layout is reloaded, BeamNG can leave the old
+      // instance alive without $destroy; it would keep playing at a volume no slider controls.
+      var instanceId = {};
+      window.__radioSyncInstance = instanceId;
+      function retired() { return window.__radioSyncInstance !== instanceId; }
+
       scope.config = { songs: [] };
       scope.stationList = [];
       scope.current = null;    // server vid of the vehicle we sit in
@@ -792,6 +798,10 @@ angular.module('beamng.apps')
       }
 
       function updatePlayers() {
+        if (retired()) {
+          for (var old in players) destroyPlayer(old);
+          return;
+        }
         var now = performance.now();
         for (var vid in states) {
           var g = gains[vid] || 0;
