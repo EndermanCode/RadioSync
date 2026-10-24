@@ -85,7 +85,9 @@ angular.module('beamng.apps')
           mp3Unsupported: 'MP3-Stream nicht abspielbar',
           ownerVol: 'für alle', ownerVolTip: 'Radio-Lautstärke für alle – lauter = auch weiter zu hören',
           offline: 'offline', offlineTip: 'Offline-Modus: eigene Musik aus dem BeamNG-Userordner, ohne Sync',
-          copyTo: 'Songs kopieren nach:', noSongsOffline: 'Keine Songs im Musikordner.', userFolder: 'BeamNG-Userordner'
+          copyTo: 'Songs kopieren nach:', noSongsOffline: 'Keine Songs im Musikordner.', userFolder: 'BeamNG-Userordner',
+          serverOutdated: 'Server-Plugin veraltet – main.lua auf dem Server aktualisieren.',
+          clientOutdated: 'RadioSync-Client veraltet – BeamNG neu starten.'
         },
         en: {
           expand: 'Expand', collapse: 'Collapse', lang: 'Language: {0}', langAuto: 'automatic',
@@ -116,7 +118,9 @@ angular.module('beamng.apps')
           mp3Unsupported: 'MP3 stream cannot be played',
           ownerVol: 'for all', ownerVolTip: 'Radio volume for everyone – louder also carries further',
           offline: 'offline', offlineTip: 'Offline mode: your own music from the BeamNG user folder, no sync',
-          copyTo: 'Copy songs to:', noSongsOffline: 'No songs in the music folder.', userFolder: 'BeamNG user folder'
+          copyTo: 'Copy songs to:', noSongsOffline: 'No songs in the music folder.', userFolder: 'BeamNG user folder',
+          serverOutdated: 'Server plugin outdated – update main.lua on the server.',
+          clientOutdated: 'RadioSync client outdated – restart BeamNG.'
         }
       };
 

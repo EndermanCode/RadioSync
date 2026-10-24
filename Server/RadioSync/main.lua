@@ -3,6 +3,9 @@
 -- and streams song files to the clients over BeamMP events.
 
 local PLUGIN = "[RadioSync]"
+-- Bump together with VERSION in the client (radioSync.lua) whenever events or states change;
+-- build.ps1 refuses to build when they differ.
+local VERSION = 2
 
 local config = {
   maxDistance = 60,
@@ -813,6 +816,7 @@ end
 
 local function sendConfig(pid)
   MP.TriggerClientEvent(pid, "radioSync_config", Util.JsonEncode({
+    version = VERSION,
     maxDistance = config.maxDistance,
     maxQueueLength = config.maxQueueLength,
     songs = songs,
@@ -1105,8 +1109,20 @@ function radioSync_songDuration(pid, data)
 end
 
 -- Client (re)loaded: send config, stations and every active radio.
+-- { version } of the client mod, missing on clients older than the version check.
+local warnedVersion = {}  -- [pid] = client version already warned about
+
 function radioSync_requestState(pid, data)
   if rateLimited(pid) then return end
+  local msg = decode(data)
+  local clientVersion = msg and tonumber(msg.version)
+  if clientVersion ~= VERSION and warnedVersion[pid] ~= (clientVersion or "none") then
+    warnedVersion[pid] = clientVersion or "none"
+    log("WARNING: " .. tostring(MP.GetPlayerName(pid)) .. " uses client version " .. tostring(clientVersion or "?")
+      .. ", server plugin is version " .. VERSION .. ". "
+      .. ((clientVersion or 0) > VERSION and "Update main.lua on the server."
+        or "Make sure Resources/Client/RadioSync.zip is current; the player may need to restart BeamNG."))
+  end
   sendConfig(pid)
   broadcastStations(pid)
   sendSnapshot(pid)
@@ -1279,6 +1295,7 @@ function radioSync_onPlayerDisconnect(pid)
   rate[pid] = nil
   transfers[pid] = nil
   liveSubs[pid] = nil
+  warnedVersion[pid] = nil
 end
 
 -- Advances stations and playlists, picks up new/removed songs in the music folder.

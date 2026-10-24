@@ -27,6 +27,18 @@ function New-Zip($zipPath, $files, $baseDir, $prefix, $level) {
   }
 }
 
+# Client and server must speak the same version (the app warns players about a mismatch).
+function Get-LuaVersion($path) {
+  $m = Select-String -Path $path -Pattern '^local VERSION = (\d+)' | Select-Object -First 1
+  if (-not $m) { throw "No 'local VERSION = <n>' in $path" }
+  [int]$m.Matches[0].Groups[1].Value
+}
+$clientVersion = Get-LuaVersion (Join-Path $clientSrc 'lua\ge\extensions\radioSync.lua')
+$serverVersion = Get-LuaVersion (Join-Path $serverSrc 'main.lua')
+if ($clientVersion -ne $serverVersion) {
+  throw "VERSION differs: client $clientVersion, server $serverVersion"
+}
+
 $optimal = [System.IO.Compression.CompressionLevel]::Optimal
 $store = [System.IO.Compression.CompressionLevel]::NoCompression
 

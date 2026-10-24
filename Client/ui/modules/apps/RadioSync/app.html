@@ -167,6 +167,8 @@
   </div>
   <div class="rs-err" ng-if="status" ng-class="{ info: statusInfo }" ng-bind="status"></div>
   <div class="rs-err info" ng-if="audioBlocked" ng-bind="t('audioBlocked')"></div>
+  <div class="rs-err" ng-if="config.versionMismatch"
+       ng-bind="t(config.versionMismatch === 'server' ? 'serverOutdated' : 'clientOutdated')"></div>
 
   <div class="rs-prog" ng-if="state">
     <div class="rs-bar" ng-class="{ seek: canControl() && isTrack() }" ng-click="seekTo($event)">

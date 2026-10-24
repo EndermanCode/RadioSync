@@ -3,6 +3,9 @@
 
 local M = {}
 
+-- Must match VERSION in the server plugin (main.lua); the app warns when they differ.
+local VERSION = 2
+
 local MUSIC_DIR = "/ui/modules/apps/RadioSync/music/"  -- song cache in the user folder, served to the UI
 local MAX_ACTIVE = 3          -- loudest radios played at the same time
 local GAIN_INTERVAL = 0.25    -- seconds between volume updates
@@ -25,7 +28,10 @@ local progressTimer = 0
 local stationsList = {}       -- music folder stations from the server (current song + elapsed)
 local reportedDurations = {}  -- [file] = true once sent to the server
 
-local offline = require("ge/extensions/radioSync/offline")  -- server plugin run locally in singleplayer
+-- Server plugin run locally in singleplayer. Dropped from the require cache first, so a reload of
+-- this extension (mod updated, see modScript.lua) also picks up the new offline code.
+package.loaded["ge/extensions/radioSync/offline"] = nil
+local offline = require("ge/extensions/radioSync/offline")
 
 -- Connected to a BeamMP server. BeamMP loaded but playing singleplayer counts as offline.
 local function isMP()
@@ -249,6 +255,10 @@ local function uiConfig()
   end
   c.musicDir = MUSIC_DIR
   c.offline = not isMP()
+  -- "server" = server plugin older than this client (or without version), "client" = this client older.
+  if config and config.version ~= VERSION then
+    c.versionMismatch = (tonumber(config.version) or 0) < VERSION and "server" or "client"
+  end
   return c
 end
 
@@ -762,7 +772,7 @@ function M.uiCommand(json)
 
   if msg.cmd == "uiReady" then
     pushAllToUI()
-    if not config then sendServer("radioSync_requestState") end
+    if not config then sendServer("radioSync_requestState", { version = VERSION }) end
     return
   end
 
@@ -838,7 +848,7 @@ function M.onUpdate(dtReal)
     requestTimer = requestTimer + dtReal
     if requestTimer >= REQUEST_INTERVAL then
       requestTimer = 0
-      sendServer("radioSync_requestState")
+      sendServer("radioSync_requestState", { version = VERSION })
     end
   elseif isMP() then
     ensureAppInLayout(dtReal)
