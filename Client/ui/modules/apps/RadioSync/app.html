@@ -1,0 +1,321 @@
+<div class="rs bngApp">
+  <style>
+    .rs { --bg: rgba(16,17,22,0.88); --card: rgba(255,255,255,0.05); --line: rgba(255,255,255,0.08);
+          --text: #f2f3f5; --dim: rgba(242,243,245,0.55); --accent: #ff6a00; --accent2: #ffb000; --danger: #ff6b5e;
+          width:100%; height:auto; max-height:100%; display:flex; flex-direction:column; box-sizing:border-box;
+          background:var(--bg); color:var(--text); border-radius:12px; border:1px solid var(--line);
+          box-shadow:0 8px 24px rgba(0,0,0,0.45); overflow:hidden;
+          font-family:'Segoe UI', Roboto, sans-serif; font-size:12px; backdrop-filter:blur(6px); }
+    .rs * { box-sizing:border-box; }
+    .rs svg { width:14px; height:14px; fill:currentColor; display:block; }
+
+    /* header */
+    .rs-head { display:flex; align-items:center; gap:8px; padding:6px 10px; border-bottom:1px solid var(--line);
+               background:linear-gradient(90deg, rgba(255,106,0,0.18), transparent); cursor:pointer; user-select:none; }
+    .rs-head:hover .rs-icon { color:var(--text); }
+    .rs-lang { background:var(--card); border:0; color:var(--dim); font-size:9px; font-weight:700; letter-spacing:0.5px;
+               border-radius:8px; padding:2px 6px; cursor:pointer; }
+    .rs-lang:hover { color:var(--text); }
+    .rs-logo { font-weight:700; letter-spacing:0.5px; font-size:12px; text-transform:uppercase; flex:1; }
+    .rs-logo b { color:var(--accent); }
+    .rs-icon { background:none; border:0; color:var(--dim); padding:3px; border-radius:6px; cursor:pointer; }
+    .rs-icon:hover { color:var(--text); background:var(--card); }
+
+    /* now playing */
+    .rs-now { padding:8px 10px 4px; display:flex; gap:8px; align-items:center; }
+    .rs-art { width:34px; height:34px; flex:none; border-radius:8px; display:flex; align-items:flex-end; justify-content:center;
+              gap:2px; padding:7px 6px; background:linear-gradient(135deg, var(--accent), var(--accent2)); }
+    .rs-art i { width:3px !important; }
+    .rs-art.off { background:var(--card); }
+    .rs-art i { width:4px; height:30%; background:rgba(255,255,255,0.9); border-radius:2px; }
+    .rs-art.on i { animation:rs-eq 0.9s ease-in-out infinite; }
+    .rs-art.on i:nth-child(2) { animation-delay:-0.3s; }
+    .rs-art.on i:nth-child(3) { animation-delay:-0.6s; }
+    .rs-art.on i:nth-child(4) { animation-delay:-0.15s; }
+    @keyframes rs-eq { 0%,100% { height:25%; } 50% { height:100%; } }
+    .rs-meta { flex:1; min-width:0; }
+    .rs-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rs-sub { color:var(--dim); font-size:11px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rs-live { display:inline-block; background:var(--danger); color:#fff; font-weight:700; font-size:9px; padding:1px 5px;
+               border-radius:3px; margin-right:4px; letter-spacing:0.5px; }
+    .rs-err { color:var(--danger); font-size:11px; padding:0 12px 4px; }
+    .rs-err.info { color:var(--accent2); }
+    .rs-dl { background:var(--card); border-radius:8px; padding:6px 8px; margin-bottom:6px; font-size:11px; color:var(--dim); }
+    .rs-dl .rs-bar { margin-top:4px; }
+    .rs-list li .s { width:34px; text-align:right; font-size:10px; color:var(--dim); flex:none; }
+    .rs-list li .s.ok { color:#5fd38d; }
+    .rs-list li.queued .t { opacity:0.55; }
+
+    /* progress */
+    .rs-prog { padding:2px 12px 0; }
+    .rs-bar { height:4px; background:var(--card); border-radius:2px; overflow:hidden; }
+    .rs-bar.seek { cursor:pointer; }
+    .rs-bar > div { height:100%; background:linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .rs-times { display:flex; justify-content:space-between; color:var(--dim); font-size:10px; margin-top:3px; }
+
+    /* controls */
+    .rs-ctrl { display:flex; align-items:center; justify-content:center; gap:6px; padding:4px 10px; }
+    .rs-btn { width:26px; height:26px; border-radius:50%; border:0; background:var(--card); color:var(--text);
+              display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.15s; }
+    .rs-btn:hover:not([disabled]) { background:rgba(255,255,255,0.14); }
+    .rs-btn[disabled] { opacity:0.3; cursor:default; }
+    .rs-btn.main { width:32px; height:32px; background:var(--accent); }
+    .rs-btn.main:hover:not([disabled]) { background:#ff8126; }
+    .rs-btn.main svg { width:18px; height:18px; }
+    .rs-loop { position:relative; color:var(--dim); }
+    .rs-loop.on { color:var(--accent); }
+    .rs-loop b { position:absolute; top:3px; right:3px; font-size:8px; background:var(--accent); color:#fff;
+                 border-radius:6px; padding:0 3px; line-height:11px; }
+
+    /* volume */
+    .rs-vol { display:flex; align-items:center; gap:8px; padding:2px 10px 6px; }
+    .rs-vol input[type=range] { flex:1; -webkit-appearance:none; height:4px; border-radius:2px; background:var(--card); outline:none; }
+    .rs-vol input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; border-radius:50%; background:var(--accent); cursor:pointer; }
+    .rs-vol > span { color:var(--dim); font-size:10px; width:28px; text-align:right; }
+    .rs-toggle { display:flex; align-items:center; gap:3px; background:var(--card); color:var(--dim); border:1px solid transparent;
+                 border-radius:10px; padding:2px 7px; font-size:10px; cursor:pointer; }
+    .rs-toggle svg { width:11px; height:11px; }
+    .rs-toggle.on { color:var(--text); border-color:var(--accent); background:rgba(255,106,0,0.18); }
+
+    /* tabs */
+    .rs-tabs { display:flex; gap:2px; padding:0 8px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+    .rs-tab { flex:1; background:none; border:0; color:var(--dim); padding:5px 2px; cursor:pointer; font-size:11px;
+              border-bottom:2px solid transparent; }
+    .rs-tab:hover { color:var(--text); }
+    .rs-tab.active { color:var(--text); border-bottom-color:var(--accent); }
+    .rs-tab small { background:var(--card); border-radius:8px; padding:0 5px; margin-left:3px; }
+
+    .rs-body { overflow-y:auto; padding:6px; max-height:180px; }
+    .rs-body::-webkit-scrollbar { width:6px; }
+    .rs-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:3px; }
+
+    .rs-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; }
+    .rs-chip { background:var(--card); border:1px solid transparent; color:var(--text); border-radius:8px; padding:8px;
+               cursor:pointer; text-align:left; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rs-chip:hover { background:rgba(255,255,255,0.1); }
+    .rs-chip.active { border-color:var(--accent); background:rgba(255,106,0,0.15); }
+
+    .rs-list { list-style:none; margin:0; padding:0; }
+    .rs-list li { display:flex; align-items:center; gap:8px; padding:4px 8px; border-radius:6px; cursor:pointer; }
+    .rs-list li:hover { background:var(--card); }
+    .rs-list li.active { background:rgba(255,106,0,0.15); color:var(--accent2); }
+    .rs-list li .n { color:var(--dim); width:16px; text-align:right; font-size:10px; }
+    .rs-list li .t { flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .rs-stations li { padding:5px 8px; }
+    .rs-group { color:var(--dim); font-size:10px; text-transform:uppercase; letter-spacing:0.5px; margin:4px 2px; }
+    .rs-chip { padding:6px 8px; font-size:11px; }
+    .rs-chip span, .rs-chip small { display:block; overflow:hidden; text-overflow:ellipsis; }
+    .rs-chip small { color:var(--dim); font-size:9px; margin-top:1px; }
+    .rs-art.cover { background-size:cover; background-position:center; }
+    .rs-art.cover i { background:rgba(255,255,255,0.8); box-shadow:0 0 3px rgba(0,0,0,0.6); }
+    .rs-ownervol { padding-top:0; }
+    .rs-ownervol svg { width:12px; height:12px; color:var(--dim); flex:none; }
+    .rs-ownervol small { color:var(--dim); font-size:9px; white-space:nowrap; }
+    .rs-stations li .t b { display:block; font-weight:600; }
+    .rs-stations li .t small { display:block; color:var(--dim); font-size:10px; overflow:hidden; text-overflow:ellipsis; }
+    .rs-stations li .s { width:auto; }
+
+    .rs-input { width:100%; background:rgba(0,0,0,0.3); color:var(--text); border:1px solid var(--line); border-radius:6px;
+                padding:6px 8px; font-size:12px; outline:none; margin-bottom:6px; }
+    .rs-input:focus { border-color:var(--accent); }
+    .rs-row { display:flex; gap:6px; }
+    .rs-pill { flex:1; background:var(--card); color:var(--text); border:0; border-radius:6px; padding:7px; cursor:pointer; font-size:11px; }
+    .rs-pill:hover:not([disabled]) { background:rgba(255,255,255,0.12); }
+    .rs-pill.primary { background:var(--accent); }
+    .rs-pill[disabled] { opacity:0.35; cursor:default; }
+    .rs-empty { color:var(--dim); text-align:center; padding:16px 8px; line-height:1.5; }
+    .rs-diag { padding:2px 10px 6px; border-top:1px solid var(--line); }
+    .rs-link { background:none; border:0; color:var(--dim); font-size:10px; cursor:pointer; padding:2px 0; text-decoration:underline; }
+    .rs-link:hover { color:var(--text); }
+    .rs-diag-head { display:flex; justify-content:space-between; gap:6px; font-size:10px; color:var(--dim); }
+    .rs-diag pre { max-height:120px; overflow:auto; background:rgba(0,0,0,0.35); border-radius:6px; padding:6px;
+                   font-size:9px; line-height:1.3; white-space:pre-wrap; margin:4px 0 0; user-select:text; }
+    .rs-hint { color:var(--dim); font-size:11px; text-align:center; padding:4px 10px 8px; }
+  </style>
+
+  <!-- Header -->
+  <div class="rs-head" ng-click="toggleCollapsed()" title="{{ settings.collapsed ? t('expand') : t('collapse') }}">
+    <div class="rs-logo">Radio<b>Sync</b></div>
+    <button class="rs-lang" ng-click="cycleLanguage(); $event.stopPropagation()" title="{{ langTitle() }}"
+            ng-bind="langLabel()"></button>
+    <span class="rs-icon">
+      <svg viewBox="0 0 24 24" ng-if="settings.collapsed"><path d="M7 10l5 5 5-5z"/></svg>
+      <svg viewBox="0 0 24 24" ng-if="!settings.collapsed"><path d="M7 14l5-5 5 5z"/></svg>
+    </span>
+  </div>
+
+  <!-- Now playing -->
+  <div class="rs-now">
+    <div class="rs-art" ng-class="{ on: playing, off: !state && !cover, cover: !!cover }"
+         ng-style="cover ? { 'background-image': 'url(' + cover + ')' } : {}"><i></i><i></i><i></i><i></i></div>
+    <div class="rs-meta">
+      <div class="rs-title" ng-bind="nowTitle()"></div>
+      <div class="rs-sub" ng-if="state">
+        <span class="rs-live" ng-if="state.mode === 'station'">RADIO</span>
+        <span ng-if="state.mode === 'station'" ng-bind="carStationTitle()"></span>
+        <span class="rs-live" ng-if="state.mode === 'live'">LIVE</span>
+        <span ng-if="state.mode === 'live'" ng-bind="t('internetRadio')"></span>
+        <span ng-if="state.mode === 'track'" ng-bind="t('trackOf', state.index, state.queue.length || 0)"></span>
+        <span ng-if="state.paused" ng-bind="t('paused')"></span>
+        <span ng-if="state.open > 0" title="{{ t('openTip') }}" ng-bind="t('open')"></span>
+        <span ng-if="state.damage > 0" title="{{ t('damagedTip') }}" ng-bind="t('damaged')"></span>
+        <span ng-if="shownVid !== current" ng-bind="t('nearby')"></span>
+      </div>
+      <div class="rs-sub" ng-if="!state" ng-bind="t('noRadioNear')"></div>
+    </div>
+  </div>
+  <div class="rs-err" ng-if="status" ng-class="{ info: statusInfo }" ng-bind="status"></div>
+  <div class="rs-err info" ng-if="audioBlocked" ng-bind="t('audioBlocked')"></div>
+
+  <div class="rs-prog" ng-if="state">
+    <div class="rs-bar" ng-class="{ seek: canControl() && isTrack() }" ng-click="seekTo($event)">
+      <div ng-style="{ width: progress.pct + '%' }"></div>
+    </div>
+    <div class="rs-times" ng-if="!settings.collapsed"><span ng-bind="fmt(progress.cur)"></span><span ng-bind="fmt(progress.dur)"></span></div>
+  </div>
+
+  <!-- Transport (owner only) -->
+  <div class="rs-ctrl" ng-if="canControl()">
+    <button class="rs-btn" ng-click="control('prev')" ng-disabled="!isTrack()" title="{{ t('prev') }}">
+      <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+    </button>
+    <button class="rs-btn main" ng-if="!state || state.paused" ng-click="control('play')" ng-disabled="!state" title="{{ t('play') }}">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="rs-btn main" ng-if="state && !state.paused" ng-click="control('pause')" title="{{ t('pause') }}">
+      <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+    </button>
+    <button class="rs-btn" ng-click="control('next')" ng-disabled="!isTrack()" title="{{ t('next') }}">
+      <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6zM16 6v12h2V6z"/></svg>
+    </button>
+    <button class="rs-btn" ng-click="control('stop')" ng-disabled="!state" title="{{ t('stop') }}">
+      <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+    </button>
+    <button class="rs-btn rs-loop" ng-class="{ on: loopMode() !== 'off' }" ng-click="cycleLoop()"
+            ng-disabled="!isTrack()" title="{{ loopTitle() }}">
+      <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+      <b ng-if="loopMode() === 'one'">1</b>
+    </button>
+  </div>
+
+  <!-- Owner volume: loudness and reach for everyone -->
+  <div class="rs-vol rs-ownervol" ng-if="canControl() && state" title="{{ t('ownerVolTip') }}">
+    <svg viewBox="0 0 24 24"><path d="M3.2 6.1L17.6 0l.8 1.8L8.6 6H20a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7c0-.4.1-.7.2-.9zM7 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm6-8v2h6v-2h-6zm0 4v2h6v-2h-6z"/></svg>
+    <input type="range" min="0" max="1" step="0.05" ng-model="ownerVol.value" ng-change="ownerVolumeChanged()">
+    <span ng-bind="((ownerVol.value * 100) | number:0) + '%'"></span>
+    <small ng-bind="t('ownerVol')"></small>
+  </div>
+
+  <!-- Local volume -->
+  <div class="rs-vol">
+    <button class="rs-icon" ng-click="toggleMute()" title="{{ t('mute') }}">
+      <svg viewBox="0 0 24 24" ng-if="!settings.muted"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+      <svg viewBox="0 0 24 24" ng-if="settings.muted"><path d="M16.5 12A4.5 4.5 0 0 0 14 8v2.2l2.5 2.5V12zM19 12c0 .9-.2 1.8-.5 2.6l1.5 1.5A9 9 0 0 0 14 3.2v2.1A7 7 0 0 1 19 12zM4.3 3L3 4.3 7.7 9H3v6h4l5 5v-6.7l4.3 4.3c-.7.5-1.4.9-2.3 1.2v2.1a9 9 0 0 0 3.7-1.8l2 2 1.3-1.3L4.3 3zM12 4L9.9 6.1 12 8.2V4z"/></svg>
+    </button>
+    <input type="range" min="0" max="1" step="0.01" ng-model="settings.volume" ng-change="volumeChanged()">
+    <span ng-bind="settings.muted ? t('volOff') : (((settings.volume * 100) | number:0) + '%')"></span>
+    <button class="rs-toggle" ng-class="{ on: settings.realistic }" ng-click="toggleRealistic()" title="{{ t('realTip') }}">
+      <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v6a3 3 0 0 0 3 3h1v-8H5v-1a7 7 0 0 1 14 0v1h-2v8h1a3 3 0 0 0 3-3v-6a9 9 0 0 0-9-9z"/></svg>
+      <span ng-bind="t('real')"></span>
+    </button>
+  </div>
+
+  <!-- Owner panel -->
+  <div ng-if="!settings.collapsed && canControl()">
+    <div class="rs-tabs">
+      <button class="rs-tab" ng-class="{ active: settings.tab === 'stations' }" ng-click="setTab('stations')">{{ t('tabStations') }}</button>
+      <button class="rs-tab" ng-class="{ active: settings.tab === 'music' }" ng-click="setTab('music')">{{ t('tabMusic') }}<small ng-if="config.songs.length">{{ config.songs.length }}</small></button>
+      <button class="rs-tab" ng-class="{ active: settings.tab === 'queue' }" ng-click="setTab('queue')">{{ t('tabPlaylist') }}<small ng-if="queueIsArray()">{{ state.queue.length }}</small></button>
+    </div>
+
+    <div class="rs-body">
+      <!-- Stations: live internet radio + music folder stations -->
+      <div ng-if="settings.tab === 'stations'">
+        <div ng-if="liveList().length">
+          <div class="rs-group" ng-bind="t('liveRadio')"></div>
+          <div class="rs-grid">
+            <button class="rs-chip" ng-repeat="st in liveList() track by st.id"
+                    ng-class="{ active: state && state.mode === 'live' && state.station === st.id }"
+                    ng-click="selectLive(st)" title="{{ st.title }}{{ st.nowPlaying ? ' – ' + st.nowPlaying : '' }}">
+              <span ng-bind="st.title"></span>
+              <small ng-if="st.nowPlaying" ng-bind="'♪ ' + st.nowPlaying"></small>
+            </button>
+          </div>
+          <div class="rs-group" ng-if="stationList.length" ng-bind="t('ownStations')"></div>
+        </div>
+        <ul class="rs-list rs-stations">
+          <li ng-repeat="st in stationList track by st.id"
+              ng-class="{ active: state && state.mode === 'station' && state.station === st.id }"
+              ng-click="selectStation(st)">
+            <span class="t">
+              <b ng-bind="stationTitle(st)"></b>
+              <small ng-bind="'♪ ' + st.songTitle"></small>
+            </span>
+            <span class="s" ng-bind="t('songsCount', st.count)"></span>
+          </li>
+        </ul>
+        <div class="rs-empty" ng-if="!stationList.length && !liveList().length">
+          {{ t('noStations') }}<br>{{ t('uploadTo') }} <b>Resources/Server/RadioSync/music/</b><br>{{ t('noStationsHint') }}
+        </div>
+      </div>
+
+      <!-- Songs from the server music folder -->
+      <div ng-if="settings.tab === 'music'">
+        <div class="rs-dl" ng-if="download">
+          {{ t('downloading', download.file, download.pct) }}<span ng-if="download.left">{{ t('moreLeft', download.left) }}</span>
+          <div class="rs-bar"><div ng-style="{ width: download.pct + '%' }"></div></div>
+        </div>
+        <div ng-if="config.songs.length">
+          <div class="rs-row">
+            <input class="rs-input" type="text" placeholder="{{ t('searchSong') }}" ng-model="songFilter.text"
+                   ng-focus="inputFocus(true)" ng-blur="inputFocus(false)">
+          </div>
+          <button class="rs-pill primary" style="width:100%; margin-bottom:6px;" ng-click="addAllSongs()"
+                  ng-bind="t('addAll', filteredSongs().length)"></button>
+          <ul class="rs-list">
+            <li ng-repeat="s in filteredSongs() track by s.file" ng-click="addSong(s)" title="{{ t('addToPlaylist') }}"
+                ng-class="{ queued: songState(s) !== 'ready' }">
+              <span class="t" ng-bind="s.title"></span>
+              <span class="s ok" ng-if="songState(s) === 'ready'">✓</span>
+              <span class="s" ng-if="songState(s) === 'loading'">{{ download.pct }}%</span>
+              <span class="s" ng-if="songState(s) === 'queued'">…</span>
+              <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>
+            </li>
+          </ul>
+        </div>
+        <div class="rs-empty" ng-if="!config.songs.length">
+          {{ t('noSongs') }}<br>{{ t('uploadTo') }} <b>Resources/Server/RadioSync/music/</b><br>{{ t('noSongsHint') }}
+        </div>
+      </div>
+
+      <!-- Playlist -->
+      <div ng-if="settings.tab === 'queue'">
+        <ul class="rs-list" ng-if="queueIsArray()">
+          <li ng-repeat="tr in state.queue track by $index"
+              ng-class="{ active: state.mode === 'track' && state.index === $index + 1 }"
+              ng-click="playIndex($index)">
+            <span class="n" ng-bind="$index + 1"></span>
+            <span class="t" ng-bind="tr.title || tr.url"></span>
+            <button class="rs-icon" ng-click="removeTrack($index); $event.stopPropagation()" title="{{ t('remove') }}">
+              <svg viewBox="0 0 24 24"><path d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg>
+            </button>
+          </li>
+        </ul>
+        <div class="rs-empty" ng-if="!queueIsArray()">{{ t('playlistEmpty') }}<br>{{ t('playlistEmptyHint') }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rs-diag" ng-if="!settings.collapsed">
+    <button class="rs-link" ng-click="runDiagnose()" ng-bind="t('diagnose')"></button>
+    <div ng-if="diagnose">
+      <div class="rs-diag-head">
+        <span ng-if="diagnose.path">{{ t('diagSaved', diagnose.run) }} <b>radiosync_diagnose.txt</b> {{ t('diagFolder') }}</span>
+        <button class="rs-link" ng-click="closeDiagnose()" ng-bind="t('close')"></button>
+      </div>
+      <pre ng-bind="diagnose.text"></pre>
+    </div>
+  </div>
+
+  <div class="rs-hint" ng-if="!canControl() && !settings.collapsed" ng-bind="t('getIn')"></div>
+</div>

@@ -1,0 +1,19 @@
+{
+  "maxDistance": 20,
+  "maxQueueLength": 50,
+  "rateLimitPerSecond": 5,
+  "downloadKBps": 512,
+  "liveRadioTest": false,
+  "admins": ["DEIN_SPIELERNAME"],
+  "liveStations": [
+    { "id": "1live",         "title": "1LIVE",                 "url": "http://wdr-1live-live.icecast.wdr.de/wdr/1live/live/mp3/128/stream.mp3" },
+    { "id": "wdr2",          "title": "WDR 2",                 "url": "http://wdr-wdr2-rheinland.icecast.wdr.de/wdr/wdr2/rheinland/mp3/128/stream.mp3" },
+    { "id": "swr3",          "title": "SWR3",                  "url": "http://liveradio.swr.de/sw282p3/swr3/play.mp3" },
+    { "id": "bayern3",       "title": "Bayern 3",              "url": "http://dispatcher.rndfnk.com/br/br3/live/mp3/mid" },
+    { "id": "antenne",       "title": "Antenne Bayern",        "url": "http://s2-webradio.antenne.de/antenne" },
+    { "id": "radioparadise", "title": "Radio Paradise",        "url": "http://stream.radioparadise.com/mp3-192" },
+    { "id": "rp-rock",       "title": "Radio Paradise Rock",   "url": "http://stream.radioparadise.com/rock-192" },
+    { "id": "rp-mellow",     "title": "Radio Paradise Mellow", "url": "http://stream.radioparadise.com/mellow-192" },
+    { "id": "hardtekk",      "title": "HardTekk Radio",        "url": "http://stream.laut.fm/hardtekk-radio" }
+  ]
+}

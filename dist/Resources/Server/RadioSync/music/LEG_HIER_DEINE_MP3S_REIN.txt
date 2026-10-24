@@ -1,0 +1,2 @@
+MP3/OGG/M4A/WAV/FLAC-Dateien in diesen Ordner hochladen.
+Neue Songs erscheinen nach spätestens 30 Sekunden in der App und werden von den Spielern automatisch heruntergeladen.

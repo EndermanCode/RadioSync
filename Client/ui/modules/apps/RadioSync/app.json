@@ -1,0 +1,8 @@
+{
+  "domElement": "<radio-sync></radio-sync>",
+  "name": "Radio Sync",
+  "description": "Synchronized car radio for BeamMP / Synchronisiertes Autoradio für BeamMP",
+  "directive": "radioSync",
+  "types": ["ui.apps.categories.misc"],
+  "css": { "width": "300px", "height": "400px", "top": "120px", "right": "20px" }
+}
