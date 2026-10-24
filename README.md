@@ -1,99 +1,103 @@
-# RadioSync – synchronisiertes Autoradio für BeamMP
+# RadioSync – synchronized car radio for BeamMP
 
-Jedes Auto hat ein Radio. Der Besitzer stellt einen Sender ein oder baut eine Playlist.
-Alle Spieler in der Nähe hören die Musik synchron mit – leiser und dumpfer, je weiter sie weg sind.
+🇬🇧 **English** · 🇩🇪 [Deutsch](README.de.md)
+
+Every car has a radio. The owner tunes in to a station or builds a playlist.
+All nearby players hear the music in sync – quieter and more muffled the farther away they are.
 
 ## Features
-- **Eigene Radiosender** aus dem `music`-Ordner auf dem Server: jeder Unterordner = ein Sender,
-  plus „Mix (alle Songs)“. Sender laufen durchgehend (gemischt) – wie echtes Radio, für alle gleich.
-- **Playlist** pro Auto aus den Server-Songs, synchron für alle (±1 s), Loop: alles / Song / aus
-- Songs einfach hochladen – Clients laden sie automatisch über die BeamMP-Verbindung und cachen sie
-- Lautstärke nach Abstand (Kamera ↔ Auto), max. 3 Radios gleichzeitig hörbar
-- Realistischer Klang („Echt“): im Auto wie aus den Boxen, von außen gedämpft + Stereo-Richtung
-- Nur der Besitzer steuert sein Radio (vom Server geprüft); jeder hat eigene Lautstärke + Stumm
-- Besitzer-Lautstärke „für alle“: lauter = für alle lauter und weiter hörbar
-- Später joinende Spieler steigen an der richtigen Stelle ein
+- **Custom radio stations** from the server's `music` folder: every subfolder = one station,
+  plus "Mix (all songs)". Stations play continuously (shuffled) – like real radio, the same for everyone.
+- **Playlist** per car from the server's songs, in sync for everyone (±1 s), loop: all / song / off
+- Just upload songs – clients download them automatically over the BeamMP connection and cache them
+- Volume based on distance (camera ↔ car), up to 3 radios audible at once
+- Realistic sound ("Echt"): inside the car like from the speakers, muffled from outside + stereo direction
+- Only the owner controls their radio (checked by the server); everyone has their own volume + mute
+- Owner volume "for everyone": louder = louder for everyone and audible from farther away
+- Players joining later start at the right position
 
-## Bauen
+## Building
 ```powershell
 .\build.ps1
 ```
-Erzeugt in `release/`: `RadioSync.zip` (Client), `RadioSync-Server.zip`
-und `RadioSync-BeamMP-Resources.zip` (alles zusammen).
+Creates in `release/`: `RadioSync.zip` (client), `RadioSync-Server.zip`
+and `RadioSync-BeamMP-Resources.zip` (everything combined).
 
-## Installation (Server)
+## Installation (server)
 ```
 Resources/
   Client/RadioSync.zip
   Server/RadioSync/main.lua
   Server/RadioSync/config.json
-  Server/RadioSync/music/          Songs + Unterordner = Sender
+  Server/RadioSync/music/          songs + subfolders = stations
 ```
-Server neu starten. Im Log erscheint `[RadioSync] Loaded` und `Music folder: X songs, Y stations`.
+Restart the server. The log shows `[RadioSync] Loaded` and `Music folder: X songs, Y stations`.
 
-## Songs & Sender
+## Songs & stations
 ```
 music/
-  Rock/      song1.mp3, song2.mp3   → Sender „Rock“
-  Chill/     ...                    → Sender „Chill“
-  lied.mp3                          → nur im Mix + Musik-Tab
+  Rock/      song1.mp3, song2.mp3   → station "Rock"
+  Chill/     ...                    → station "Chill"
+  track.mp3                         → only in Mix + "Musik" tab
 ```
-- MP3/OGG/M4A/WAV/FLAC hochladen. Dateiname = Titel (`_` wird zu Leerzeichen). Kein Neustart nötig,
-  der Server prüft den Ordner alle 30 s.
-- Clients laden fehlende Songs im Hintergrund (Fortschritt im Tab „Musik“), gerade gespielte zuerst.
-  Gespeichert im BeamNG-Userordner unter `ui/modules/apps/RadioSync/music/`.
-- Tempo pro Spieler: `downloadKBps` (Standard 512 KB/s → 5-MB-Song ≈ 10 s).
-- Braucht BeamMP-Server ≥ 3.1 (`FS.ListFiles`/`FS.ListDirectories`).
+- Upload MP3/OGG/M4A/WAV/FLAC. File name = title (`_` becomes a space). No restart needed,
+  the server checks the folder every 30 s.
+- Clients download missing songs in the background (progress in the "Musik" tab), currently playing ones first.
+  Stored in the BeamNG user folder under `ui/modules/apps/RadioSync/music/`.
+- Speed per player: `downloadKBps` (default 512 KB/s → 5 MB song ≈ 10 s).
+- Requires BeamMP server ≥ 3.1 (`FS.ListFiles`/`FS.ListDirectories`).
 
-## Benutzung (Spieler)
-1. Esc → **UI Apps** → App **„Radio Sync“** hinzufügen. Die Musik läuft in dieser App.
-2. Ins eigene Auto setzen:
-   - Tab **Sender**: Sender anklicken
-   - Tab **Musik**: Songs zur Playlist hinzufügen
-   - Tab **Playlist**: Reihenfolge, springen, entfernen
-3. Andere Spieler in der Nähe hören automatisch mit.
+## Usage (players)
+1. Esc → **UI Apps** → add the **"Radio Sync"** app. The music plays inside this app.
+2. Get into your own car:
+   - **Sender** tab (stations): click a station
+   - **Musik** tab (music): add songs to the playlist
+   - **Playlist** tab: reorder, skip to, remove
+3. Other players nearby automatically hear it too.
 
-## Konfiguration (`config.json`)
-| Feld | Bedeutung |
+> The in-game UI is currently in German.
+
+## Configuration (`config.json`)
+| Field | Meaning |
 |------|-----------|
-| `maxDistance` | Meter, ab denen ein Radio nicht mehr hörbar ist |
-| `maxQueueLength` | Max. Einträge pro Playlist |
-| `rateLimitPerSecond` | Max. Radio-Befehle pro Spieler und Sekunde |
-| `downloadKBps` | Song-Download-Tempo pro Spieler (KB/s) |
-| `liveRadioTest` | Beim Start prüfen, ob der Host Live-Radio weiterleiten könnte (Ergebnis im Log) |
-| `liveStations` | Internetsender, vom Server weitergeleitet: `id`, `title`, `url` |
-| `admins` | Spielernamen oder BeamMP-IDs, die `/radio`-Befehle nutzen dürfen |
+| `maxDistance` | Distance in meters beyond which a radio is no longer audible |
+| `maxQueueLength` | Max. entries per playlist |
+| `rateLimitPerSecond` | Max. radio commands per player per second |
+| `downloadKBps` | Song download speed per player (KB/s) |
+| `liveRadioTest` | On startup, check whether the host could relay live radio (result in the log) |
+| `liveStations` | Internet stations relayed by the server: `id`, `title`, `url` |
+| `admins` | Player names or BeamMP IDs allowed to use `/radio` commands |
 
-## Admin-Befehle (Chat)
-| Befehl | Wirkung |
+## Admin commands (chat)
+| Command | Effect |
 |---|---|
-| `/radio status` | Anzahl Radios/Songs, Reichweite, Live-Radio-Status |
-| `/radio off` | alle Radios aus |
-| `/radio off <Name>` | Radios eines Spielers aus (Teil des Namens reicht) |
-| `/radio range <Meter>` | Reichweite live ändern (bis Neustart) |
-| `/radio live on\|off` | Live-Radio für alle an/aus |
-| `/radio rescan` | Musikordner sofort neu einlesen |
+| `/radio status` | Number of radios/songs, range, live radio status |
+| `/radio off` | Turn off all radios |
+| `/radio off <name>` | Turn off a player's radios (part of the name is enough) |
+| `/radio range <meters>` | Change range live (until restart) |
+| `/radio live on\|off` | Live radio on/off for everyone |
+| `/radio rescan` | Rescan the music folder immediately |
 
-Befehle erscheinen nicht im Chat der anderen.
+Commands don't show up in other players' chat.
 
-## Song-Infos
-- Server liest ID3-Tags (Interpret, Titel) → Anzeige „Interpret – Titel“ statt Dateiname.
-- App zeigt das Cover aus der MP3 (eingebettetes Bild).
-- Live-Radio: aktueller Titel aus dem Stream (ICY-Metadaten), falls der Sender ihn schickt.
+## Song info
+- The server reads ID3 tags (artist, title) → shows "Artist – Title" instead of the file name.
+- The app shows the cover art from the MP3 (embedded image).
+- Live radio: current title from the stream (ICY metadata), if the station sends it.
 
-## Live-Radio (Internetsender)
-BeamNG sperrt für Mods jeden Internetzugriff (UI: „Format error“, Lua: „connect restricted“).
-Deshalb holt der **Server** die Sender per `curl` und verteilt sie über die BeamMP-Verbindung.
-- Nur Linux-Server mit `curl` (Test: `"liveRadioTest": true` → Log `Live-Radio-Test: MOEGLICH`).
-- Sender in `config.json` → `liveStations` (`id`, `title`, `url`). Nur MP3-Streams, `http://` oder `https://`.
-- Ein Sender wird nur geholt, solange ein Spieler ihn in Hörweite hat (+30 s Nachlauf).
-- Upload pro zuhörendem Spieler ≈ Bitrate des Senders (128 kbit/s ≈ 16 KB/s).
-- Alle 30 min startet `curl` neu → ca. 1 s Lücke. Temporäre Dateien `live_*.mp3` im Plugin-Ordner.
+## Live radio (internet stations)
+BeamNG blocks all internet access for mods (UI: "Format error", Lua: "connect restricted").
+That's why the **server** fetches the stations via `curl` and distributes them over the BeamMP connection.
+- Linux servers with `curl` only (test: `"liveRadioTest": true` → log `Live-Radio-Test: MOEGLICH`).
+- Stations in `config.json` → `liveStations` (`id`, `title`, `url`). MP3 streams only, `http://` or `https://`.
+- A station is only fetched while a player has it within hearing range (+30 s grace period).
+- Upload per listening player ≈ the station's bitrate (128 kbit/s ≈ 16 KB/s).
+- `curl` restarts every 30 min → approx. 1 s gap. Temporary files `live_*.mp3` in the plugin folder.
 
-## Aufbau
+## Structure
 ```
-Server/RadioSync/main.lua                 Fahrzeug-Radios, Sender, Song-Übertragung
-Client/lua/ge/extensions/radioSync.lua    BeamMP-Events ↔ UI, Song-Cache, Abstand → Lautstärke
-Client/scripts/radioSync/modScript.lua    lädt die Extension
-Client/ui/modules/apps/RadioSync/         UI-App: Wiedergabe, Effekte, Bedienung
+Server/RadioSync/main.lua                 Vehicle radios, stations, song transfer
+Client/lua/ge/extensions/radioSync.lua    BeamMP events ↔ UI, song cache, distance → volume
+Client/scripts/radioSync/modScript.lua    Loads the extension
+Client/ui/modules/apps/RadioSync/         UI app: playback, effects, controls
 ```
